@@ -1,0 +1,65 @@
+
+services:
+  #mariadb
+  mariadb:
+    image: mariadb
+    container_name: mariadb
+    restart: always
+    build: ./mariadb
+    volumes:
+      - ./mariadb:/var/lib/mysql
+    env_file :
+      - .env
+    networks :
+      - app-net
+
+#nginx
+  nginx:
+    image: nginx
+    container_name: nginx
+    restart: always
+    build: ./nginx
+    ports:
+      - "443:443"
+    depends_on:
+      - mariadb
+      - wordpress
+    volumes:
+      - ./wordpress:/var/www/wordpress
+    networks:
+      - app-net
+
+#wordpress
+  wordpress:
+    image: wordpress
+    container_name: wordpress
+    restart: always
+    build: ./wordpress
+    depends_on:
+      - mariadb
+    volumes:
+      - wordpress:/var/www/wordpress
+    env_file :
+      - .env
+    networks:
+      - app-net
+
+
+volumes:
+  mariadb:
+   driver: local
+   driver_opts:
+      device: ~/data/mariadb
+      type : none
+      o : bind
+
+  wordpress:
+    driver: local
+    driver_opts:
+      device: ~/data/wordpress
+      type : none
+      o : bind
+
+networks:
+  app-net:
+    driver: bridge
