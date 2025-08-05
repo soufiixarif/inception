@@ -1,6 +1,8 @@
 #!bin/bash
 
-sleep 10
+sleep 20
+
+mkdir -p /run/php
 
 if [ -f /var/www/wordpress/wp-config.php ]; then
     echo "wordpress already installed"
@@ -24,10 +26,9 @@ else
     wp core install --url=$WEBSITE_DOMAINE_NAME --title=$WEBSITE_TITLE --admin_user=$WEBSITE_ADMIN_NAME --admin_password=$WEBSITE_PASSWORD --admin_email=$WEBSITE_ADMIN_EMAIL --skip-email --allow-root 
 	wp user create ${NEW_USER} ${NEW_EMAIL} --user_pass=$NEW_PASS --role=$NEW_ROLE --allow-root
 fi
-exec "$@"
 
 echo "🔧 Configuring PHP-FPM..."
 sed -i 's|^listen = .*|listen = 9000|' /etc/php/7.4/fpm/pool.d/www.conf
 
 echo "🚀 Starting PHP-FPM..."
-exec /usr/sbin/php-fpm7.4 -F
+exec php-fpm7.4 -F
