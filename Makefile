@@ -9,7 +9,5 @@ clean:
 fclean: clean
 	docker system prune -af --volumes
 	sudo rm -rf ${HOME}/data/*
-	
-
 
 re: fclean all
