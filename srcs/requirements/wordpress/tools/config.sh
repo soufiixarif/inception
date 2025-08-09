@@ -1,34 +1,37 @@
-#!bin/bash
+#!/bin/bash
 
-sleep 20
-
-mkdir -p /run/php
-
-if [ -f /var/www/wordpress/wp-config.php ]; then
+sleep 10
+if [ -f /var/www/html/wp-config.php ]; then
     echo "wordpress already installed"
 else
-	mkdir -p /var/www/wordpress
-	cd /var/www/wordpress
+	mkdir -p /var/www/html
+
+	cd /var/www/html
+
 	rm -rf *
 
-    curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-    chmod +x wp-cli.phar
-    mv wp-cli.phar /usr/local/bin/wp
+	curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar  
 
-    wp core download --allow-root
-    mv /var/www/wordpress/wp-config-sample.php  /var/www/wordpress/wp-config.php
+	chmod +x wp-cli.phar
 
-    wp config set --allow-root DB_NAME ${MYSQL_DATABASE}
+	mv wp-cli.phar /usr/local/bin/wp
+
+	chmod -R 777 /var/www/html/
+
+	wp core download --allow-root
+
+	mv /var/www/html/wp-config-sample.php  /var/www/html/wp-config.php
+
+	wp config set --allow-root DB_NAME ${MYSQL_DATABASE} 
 	wp config set --allow-root DB_USER ${MYSQL_USER}
 	wp config set --allow-root DB_PASSWORD ${MYSQL_PASSWORD}
-	wp config set --allow-root DB_HOST ${DB_HOST}
+	wp config set --allow-root DB_HOST "mariadb:3306"
 
-    wp core install --url=$WEBSITE_DOMAINE_NAME --title=$WEBSITE_TITLE --admin_user=$WEBSITE_ADMIN_NAME --admin_password=$WEBSITE_PASSWORD --admin_email=$WEBSITE_ADMIN_EMAIL --skip-email --allow-root 
+	wp core install --url=$WEBSITE_DOMAINE_NAME --title=$WEBSITE_TITLE --admin_user=$WEBSITE_ADMIN_NAME --admin_password=$WEBSITE_PASSWORD --admin_email=$WEBSITE_ADMIN_EMAIL --skip-email --allow-root
+
 	wp user create ${NEW_USER} ${NEW_EMAIL} --user_pass=$NEW_PASS --role=$NEW_ROLE --allow-root
+
+
 fi
-
-echo "🔧 Configuring PHP-FPM..."
-sed -i 's|^listen = .*|listen = 9000|' /etc/php/7.4/fpm/pool.d/www.conf
-
-echo "🚀 Starting PHP-FPM..."
-exec php-fpm7.4 -F
+echo "wordpress ready to use"
+exec "$@"

@@ -1,62 +1,73 @@
 
+# =====================
+# SERVICES ============
+# =====================
 services:
-  #mariadb
+  # 1️⃣ MariaDB — must start first
   mariadb:
-    image: mariadb:sarif
     container_name: mariadb
+    image: mariadb:sarif
     restart: always
     build: ./requirements/mariadb
     volumes:
-      - ./mariadb:/var/lib/mysql
-    env_file :
+      - mariadb-volume:/var/lib/mysql
+    env_file:
       - .env
-    networks :
-      - app-net
-
-#nginx
-  nginx:
-    image: nginx:sarif
-    container_name: nginx
-    restart: always
-    build: ./requirements/nginx
-    ports:
-      - "443:443"
-    volumes:
-      - ./wordpress:/var/www/wordpress
     networks:
-      - app-net
+      - inception
 
-#wordpress
+  # 2️⃣ WordPress — waits for MariaDB
   wordpress:
-    image: wordpress:sarif
     container_name: wordpress
+    image: wordpress:sarif
     restart: always
     build: ./requirements/wordpress
     depends_on:
       - mariadb
     volumes:
-      - wordpress:/var/www/wordpress
-    env_file :
+      - wordpress-volume:/var/www/html
+    env_file:
       - .env
     networks:
-      - app-net
+      - inception
 
+  # 3️⃣ Nginx — depends on WordPress (PHP backend)
+  nginx:
+    container_name: nginx
+    image: nginx:sarif
+    restart: always
+    build: ./requirements/nginx
+    depends_on:
+      - wordpress
+    ports:
+      - "443:443"
+    volumes:
+      - wordpress-volume:/var/www/html
+    networks:
+      - inception
 
+# =====================
+# VOLUMES =============
+# =====================
 volumes:
-  mariadb:
-   driver: local
-   driver_opts:
-      device: ~/data/mariadb
-      type : none
-      o : bind
-
-  wordpress:
+  mariadb-volume:
     driver: local
     driver_opts:
-      device: ~/data/wordpress
-      type : none
-      o : bind
+      type: none
+      device: ${PWD}/data/mariadb
+      o: bind
 
+  wordpress-volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/data/wordpress
+      o: bind
+
+# =====================
+# NETWORKS ============
+# =====================
 networks:
-  app-net:
+  inception:
+    name: inception
     driver: bridge
