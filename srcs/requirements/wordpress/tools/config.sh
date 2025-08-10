@@ -31,7 +31,8 @@ else
 
 	wp user create ${NEW_USER} ${NEW_EMAIL} --user_pass=$NEW_PASS --role=$NEW_ROLE --allow-root
 
-
+	wp theme install twentytwentyfour --allow-root
+	wp theme activate twentytwentyfour --allow-root
 fi
 echo "wordpress ready to use"
 exec "$@"
